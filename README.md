@@ -16,7 +16,7 @@ This repository contains a complete ATAC-seq analysis pipeline designed for SLUR
 2. Submit to SLURM:
    ```bash
    sbatch pipeline.sh
-
+   ```
 
 ## Step-by-Step Description
 
