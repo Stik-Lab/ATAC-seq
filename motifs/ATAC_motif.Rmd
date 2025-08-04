@@ -1,0 +1,160 @@
+---
+title: "MOTIF ANALYSIS"
+output: html_document
+---
+
+# Motif Analysis with HOMER in ATAC-seq Peaks
+
+This analysis visualizes enriched motifs from differential ATAC-seq peaks (UP, DOWN, NO) using HOMER outputs. The R script reads `knownResults.txt`, cleans motif names, filters representative motifs, and plots the top enriched ones by -log2(p-value).
+
+---
+
+## Load Libraries
+
+```{r pressure, echo=FALSE}
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+```
+
+# UNDER CONSTRUCTION
+
+# ######### motif analysis with homer
+
+```{r pressure, echo=FALSE}
+library(reshape2)
+UP_motifs <- read.table("../motif/UP_peaks/knownResults.txt",
+                            header = TRUE,
+                            sep = "\t")
+UP_motifs$minuslog2_pvalue <- -log2(UP_motifs$P.value)
+UP_motifs$type <- "UP"
+
+DOWN_motifs <- read.table("../motif/DOWN_peaks/knownResults.txt",
+                            header = TRUE,
+                            sep = "\t")
+DOWN_motifs$minuslog2_pvalue <- -log2(DOWN_motifs$P.value)
+DOWN_motifs$type <- "DOWN"
+
+NO_motifs <- read.table("../motif/NO_peaks/knownResults.txt",
+                            header = TRUE,
+                            sep = "\t")
+NO_motifs$minuslog2_pvalue <- -log2(DOWN_motifs$P.value)
+NO_motifs$type <- "NO"
+
+
+
+# prepare dataframe and separate by different terms
+
+UP_rch_697EP1HFpk_motifs_sep <- UP_rch_697EP1HFpk_motifs %>%
+  separate(Motif.Name, into = c("Gene", "Info"), sep = "\\(", extra = "merge") %>%
+  mutate(Info = paste0("(", Info))
+
+UP_rch_697EP1HFpk_motifs_sep <- UP_rch_697EP1HFpk_motifs_sep %>%
+  separate(Info, into = c("Factor", "Descripcion", "GSE", "Homer"), sep = "/", extra = "merge")
+UP_rch_697EP1HFpk_motifs_sep$Factor <- gsub("[()]", "", UP_rch_697EP1HFpk_motifs_sep$Factor)
+UP_rch_697EP1HFpk_motifs_sep$GSE <- gsub("\\)", "", UP_rch_697EP1HFpk_motifs_sep$GSE)
+UP_rch_697EP1HFpk_motifs_sep$GSE <- gsub("\\(", "", UP_rch_697EP1HFpk_motifs_sep$GSE)
+
+# select only the first motif of the different factors
+UP_rch_697EP1HFpk_motifs_sep_uno <- UP_rch_697EP1HFpk_motifs_sep %>%
+  group_by(Factor) %>%  
+  slice(1) %>%                  
+  ungroup()
+
+# create new column with consensous seq + gene name
+UP_rch_697EP1HFpk_motifs_sep_uno <- UP_rch_697EP1HFpk_motifs_sep_uno %>%
+  mutate(Gene_Consensus = paste(Gene, Consensus, sep = "_"))
+
+# prepare dataframe and separate by different terms
+DOWN_rch_697EP1HFpk_motifs_sep <- DOWN_rch_697EP1HFpk_motifs %>%
+  separate(Motif.Name, into = c("Gene", "Info"), sep = "\\(", extra = "merge") %>%
+  mutate(Info = paste0("(", Info))
+
+DOWN_rch_697EP1HFpk_motifs_sep <- DOWN_rch_697EP1HFpk_motifs_sep %>%
+  separate(Info, into = c("Factor", "Descripcion", "GSE", "Homer"), sep = "/", extra = "merge")
+DOWN_rch_697EP1HFpk_motifs_sep$Factor <- gsub("[()]", "", DOWN_rch_697EP1HFpk_motifs_sep$Factor)
+DOWN_rch_697EP1HFpk_motifs_sep$GSE <- gsub("\\)", "", DOWN_rch_697EP1HFpk_motifs_sep$GSE)
+DOWN_rch_697EP1HFpk_motifs_sep$GSE <- gsub("\\(", "", DOWN_rch_697EP1HFpk_motifs_sep$GSE)
+
+# select only the first motif of the different factors
+DOWN_rch_697EP1HFpk_motifs_sep_uno <- DOWN_rch_697EP1HFpk_motifs_sep %>%
+  group_by(Factor) %>%  
+  slice(1) %>%                  
+  ungroup()
+
+# create new column with consensous seq + gene name
+DOWN_rch_697EP1HFpk_motifs_sep_uno <- DOWN_rch_697EP1HFpk_motifs_sep_uno %>%
+  mutate(Gene_Consensus = paste(Gene, Consensus, sep = "_"))
+
+# NO
+# prepare dataframe and separate by different terms
+NO_rch_697EP1HFpk_motifs_sep <- NO_rch_697EP1HFpk_motifs %>%
+  separate(Motif.Name, into = c("Gene", "Info"), sep = "\\(", extra = "merge") %>%
+  mutate(Info = paste0("(", Info))
+
+NO_rch_697EP1HFpk_motifs_sep <- NO_rch_697EP1HFpk_motifs_sep %>%
+  separate(Info, into = c("Factor", "Descripcion", "GSE", "Homer"), sep = "/", extra = "merge")
+NO_rch_697EP1HFpk_motifs_sep$Factor <- gsub("[()]", "", NO_rch_697EP1HFpk_motifs_sep$Factor)
+NO_rch_697EP1HFpk_motifs_sep$GSE <- gsub("\\)", "", NO_rch_697EP1HFpk_motifs_sep$GSE)
+NO_rch_697EP1HFpk_motifs_sep$GSE <- gsub("\\(", "", NO_rch_697EP1HFpk_motifs_sep$GSE)
+
+# select only the first motif of the different factors
+NO_rch_697EP1HFpk_motifs_sep_uno <- NO_rch_697EP1HFpk_motifs_sep %>%
+  group_by(Factor) %>%  
+  slice(1) %>%                  
+  ungroup()
+
+# create new column with consensous seq + gene name
+NO_rch_697EP1HFpk_motifs_sep_uno <-NO_rch_697EP1HFpk_motifs_sep_uno %>%
+  mutate(Gene_Consensus = paste(Gene, Consensus, sep = "_"))
+
+
+
+```
+
+```{r pressure, echo=FALSE}
+# plot curated results
+
+DOWN_rch_697EP1HFpk_motifs_sep_top <- head(DOWN_rch_697EP1HFpk_motifs_sep_uno[order(DOWN_rch_697EP1HFpk_motifs_sep_uno$P.value), ], 20)
+UP_rch_697EP1HFpk_motifs_sep_uno_top <- head(UP_rch_697EP1HFpk_motifs_sep_uno[order(UP_rch_697EP1HFpk_motifs_sep_uno$P.value), ], 20)
+NO_rch_697EP1HFpk_motifs_sep_uno_top <- head(NO_rch_697EP1HFpk_motifs_sep_uno[order(NO_rch_697EP1HFpk_motifs_sep_uno$P.value), ], 20)
+
+pdf("plots/top10motifs_deseq2peaks_rch_697EP1HFpk_curated.pdf", width = 13, height = 10)
+ggplot(UP_rch_697EP1HFpk_motifs_sep_uno_top, aes(x = reorder(Gene_Consensus, minuslog2_pvalue), y = minuslog2_pvalue,fill = minuslog2_pvalue)) +
+  geom_bar(stat = "identity", position = position_dodge(width = 0.7), width = 0.5) +
+  coord_flip() +
+  labs(title = "-log2(P-values) of Top 20 Motifs in UP peaks (ARO_EP1)", x = "Motif", y = "-log2(P-value)") +
+  theme_minimal() +
+  theme(
+    text = element_text(size = 12),
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  ) +
+  scale_fill_gradient(low = "pink", high = "red")
+
+ggplot(DOWN_rch_697EP1HFpk_motifs_sep_top, aes(x = reorder(Gene_Consensus, minuslog2_pvalue), y = minuslog2_pvalue, fill = minuslog2_pvalue)) +
+  geom_bar(stat = "identity", position = position_dodge(width = 0.7), width = 0.5) +
+  coord_flip() +
+  labs(title = "-log2(P-values) of Top 20 Motifs in DOWN peaks (WT_EP1)", x = "Motif", y = "-log2(P-value)") +
+  theme_minimal() +
+  theme(
+    text = element_text(size = 12),
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  ) +
+  scale_fill_gradient(low = "lightblue", high = "darkblue")
+
+ggplot(NO_rch_697EP1HFpk_motifs_sep_uno_top, aes(x = reorder(Gene_Consensus, minuslog2_pvalue), y = minuslog2_pvalue, fill = minuslog2_pvalue)) +
+  geom_bar(stat = "identity", position = position_dodge(width = 0.7), width = 0.5) +
+  coord_flip() +
+  labs(title = "-log2(P-values) of Top 20 Motifs in NO peaks", x = "Motif", y = "-log2(P-value)") +
+  theme_minimal() +
+  theme(
+    text = element_text(size = 12),
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  ) +
+  scale_fill_gradient(low = "#e1e4e8", high = "#646f77")
+
+dev.off()
+
+```
+
+
