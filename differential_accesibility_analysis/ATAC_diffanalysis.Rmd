@@ -1,0 +1,308 @@
+---
+title: "Differential analysis of Chromatin Accessiblity"
+author: "Estel Ferré"
+date: "2025-08-04"
+output: html_document
+---
+
+# Load libraries and data
+
+```{r}
+
+library(DESeq2)
+library(dplyr)
+library(ggplot2)
+library(org.Hs.eg.db)
+library(ChIPseeker)
+library(TxDb.Hsapiens.UCSC.hg38.knownGene)
+
+```
+
+
+```{r}
+
+cov_ATACpeaks = read.table(".bed",
+                           sep = "\t")
+
+cov_ATACpeaks$peak = paste0("peak_", seq(1, nrow(cov_ATACpeaks)))
+rownames(cov_ATACpeaks) = cov_ATACpeaks$peak
+
+condition = c( "X", "X", "Y", "Y")
+sampleinfo = data.frame(row.names=c("X_1", "X_2", "Y_1", "Y_2"), condition)
+
+ddsObj<- DESeqDataSetFromMatrix(countData = cov_ATACpeaks, 
+                                colData = sampleinfo, 
+                                design = ~ condition)
+
+ddsObj$condition <- relevel(ddsObj$condition, ref= 'X')
+
+```
+
+# generate pca
+
+```{r}
+# NORMALIZATION 
+
+dds_norm1 <- vst(ddsObj)
+
+pdf("pca_X.pdf")
+plotPCA(dds_norm1, intgroup = "condition") + theme_bw()
+dev.off()
+
+```
+
+# generate results dataframe
+
+```{r pressure, echo=FALSE}
+
+results <- DESeq(ddsObj)
+results <- results(results, alpha=0.05)
+df_results = as.data.frame(results)
+df_results$peak = rownames(df_results)
+summary(results)
+
+df_results = merge(df_results, cov_ATACpeaks, by = "peak")
+
+df_results$symbol = mapIds(org.Hs.eg.db, keys = df_results$ensembl, keytype = 'ENSEMBL', column = 'SYMBOL')
+
+df_results<-mutate(df_results, 
+                          direction = ifelse(log2FoldChange>0, "up","down"), 
+                          stat_diff = ifelse(pvalue<0.05, "signf", "no_signf"),
+                          bio_diff = ifelse(abs(log2FoldChange)>0, "relevant","irrelevant"), 
+                          diff_group = paste(direction, stat_diff, bio_diff))
+
+df_results$diffexpressed <- "NO"
+df_results$diffexpressed[df_results$log2FoldChange > 1 & df_results$padj < 0.05] <- "UP" 
+df_results$diffexpressed[df_results$log2FoldChange < -1 & df_results$padj < 0.05] <- "DOWN"
+df_results$ensembl_gene_id <- rownames(df_results)
+
+View(df_results)
+
+write.table(df_results, "resultsX.tab",
+            quote = F,
+            )
+
+```
+
+# volcano plot function
+
+```{r pressure, echo=FALSE}
+
+volcano_rna <- function(df,
+                        gene_column = gene_column,
+                        colors = colors,
+                        number_genes = number_genes,
+                        title = title) {
+  gene_column <- as.character(gene_column)
+  df$log2FoldChange <- as.numeric(as.character(df$log2FoldChange))
+  df$delabel <- NA
+  df$pvalue <- as.numeric(as.character(df$pvalue))
+  top_genes <- head(df[order(df$pvalue), gene_column], number_genes)
+  df$delabel <- ifelse(df[[gene_column]] %in% top_genes, df[[gene_column]], NA)
+
+  title <- title
+
+  ggplot(data=df, aes(x=log2FoldChange, y=-log10(pvalue), col=diffexpressed)) +
+    geom_point(alpha = 0.5) +
+
+    scale_color_manual(values = colors,
+                       labels = c("DOWN peaks", "Not significant", "UP peaks")) +
+    labs(title = title, x = "Log2 Fold Change", y = "-Log10 pvalue") +
+   # geom_vline(xintercept= 0 , col="black", linetype = 'dashed') +
+    theme_minimal() +
+    geom_hline(yintercept=-log10(0.05), col="black", linetype = 'dashed') +
+    ggtitle(title)
+
+}
+
+```
+
+# volcano plot
+
+```{r pressure, echo=FALSE}
+
+pdf("volcano_X.pdf")
+volcano_rna(df_results, "peak", c("blue", "grey", "red"), 10, "Volcano plot differential accessiblity peaks deseq2" ) + theme_classic()
+dev.off()
+
+```
+
+# peak annotation
+
+```{r pressure, echo=FALSE}
+
+txdb <- TxDb.Hsapiens.UCSC.hg38.knownGene
+up_peaks <- subset(df_results, diffexpressed == "UP")
+down_peaks <- subset(df_results, diffexpressed == "DOWN")
+
+
+all_peaks <- df_results[8:10]
+all_peaks$diffexpresed <- df_results$diffexpressed
+write.table(all_peaks, "ALL_peaks.bed",
+            sep = "\t",
+            quote = FALSE,
+            col.names = FALSE,
+            row.names = FALSE)
+
+write.table(up_peaks[8:10], "UP_peaks.bed",
+            sep = "\t",
+            quote = FALSE,
+            col.names = FALSE,
+            row.names = FALSE)
+write.table(down_peaks[8:10], "DOWN_peaks.bed",
+            sep = "\t",
+            quote = FALSE,
+            col.names = FALSE,
+            row.names = FALSE)
+
+peak_file_up <- readPeakFile("UP_peaks.bed")
+peak_file_down <- readPeakFile("DOWN_peaks.bed")
+peak_file_all <- readPeakFile("ALL_peaks.bed")
+
+peakAnno_up <- annotatePeak(peak_file_up, tssRegion=c(-3000, 3000),
+                         TxDb=txdb, annoDb="org.Hs.eg.db")
+peakAnno_down <- annotatePeak(peak_file_down, tssRegion=c(-3000, 3000),
+                         TxDb=txdb, annoDb="org.Hs.eg.db")
+peakAnno_all <- annotatePeak(peak_file_all, tssRegion=c(-3000, 3000),
+                         TxDb=txdb, annoDb="org.Hs.eg.db")
+
+peakAnno_up_df = as.data.frame(peakAnno_up)
+peakAnno_down_df = as.data.frame(peakAnno_down)
+peakAnno_all_df = as.data.frame(peakAnno_all)
+
+peakAnno = rbind(peakAnno_up_df, peakAnno_down_df)
+
+```
+
+###### ON PROCES
+
+# GO function
+
+```{r}
+
+createdfforGO <- function(df) {
+  
+  library(enrichR)
+
+dbs <- listEnrichrDbs()  
+dbs <- c("GO_Biological_Process_2023")
+
+  enriched <- enrichr(as.vector(df$SYMBOL), dbs)
+  enriched[[1]] <- enriched[[1]] %>%
+    separate(col = "Overlap", into = c("Gene_count", "total"), sep = "/")
+  enriched[[1]]$Gene_count <- as.numeric(enriched[[1]]$Gene_count)
+  enriched[[1]]$total <- as.numeric(enriched[[1]]$total)
+  enriched[[1]]$gene_ratio <- enriched[[1]]$Gene_count / enriched[[1]]$total
+
+  print(enriched[[1]])
+}
+
+
+createPLOTGO <- function(df2, title) {
+  library(ggplot2)
+  library(grid)  
+  library(gridExtra)
+
+  y = ggplot(head(df2, n = 20), aes(x = Term, y = -log10(P.value))) +
+    geom_hline(yintercept = 1, linetype = "dashed", color = "azure4", size = 0.5) +
+    geom_point(aes(size = Gene_count, colour = gene_ratio), alpha = 0.7) +
+    scale_x_discrete(limits = rev(head(df2$Term, n = 20))) +
+    scale_color_gradient(low = "green", high = "red", limits = c(0, NA)) +
+    coord_flip() +
+    theme_bw() +
+    theme(
+      axis.ticks.length = unit(-0.1, "cm"),
+      axis.text.x = element_text(margin = margin(5, 5, 0, 5, "pt"), size = 14),
+      axis.text.y = element_text(margin = margin(5, 5, 5, 5, "pt"), size = 12),
+      axis.text = element_text(color = "black"),
+      panel.grid.minor = element_blank(),
+      legend.title.align = 0.5,
+      plot.title = element_text(hjust = 0.5, face = "bold", size = 16),
+      axis.title.x = element_text(size = 12, face = "bold"),
+      axis.title.y = element_text(size = 12, face = "bold")
+   ) +
+    xlab("GO Terms") +
+    ylab("-log10(P.value)") +
+    labs(color = "Gene Ratio", size = "Number\nof genes") +
+    ggtitle(title)
+
+print(y)
+
+}
+
+
+
+
+```
+
+# GO
+
+```{r}
+
+library(enrichR)
+GO <- createdfforGO(peakAnno_loopstime_df_0h)
+
+pdf("0hloopscutNPM1cpks.pdf", width = 13, height = 10)
+createPLOTGO(GO_0h_chippks, "GO")
+dev.off()
+
+
+```
+
+# boxplot function
+
+```{r}
+boxplot_ptch <- function(counts_df = counts_df, cond1, cond2) {
+  # Define headers
+
+  convert_to_numeric_df <- function(df) {
+    df[] <- lapply(df, function(x) as.numeric(as.character(x)))
+    return(df)
+  }
+
+  counts_df <- convert_to_numeric_df(counts_df)
+  aa_edge <- as.matrix(counts_df)
+
+  # Log2 transformation
+  aa_log2 <- log2(aa_edge + 1)  # Add 1 to avoid log2(0) issues
+
+  # Centering
+  aa_log2_c <- function(x) {
+    scale(t(aa_log2), scale = FALSE)
+  }
+  counts_centralized_aa_log2 <- t(aa_log2_c(aa_log2))
+  aa_log2_center <- counts_centralized_aa_log2
+
+  # Prepare data for boxplot
+  dat_aa_log2 <- stack(as.data.frame(aa_log2_center))
+  #dat_aa_log2 <- dat_aa_log2 %>%
+  #  mutate(type = ifelse(ind %in% cond2*, cond2, cond1))
+  dat_aa_log2 <- dat_aa_log2 %>%
+    mutate(type = ifelse(grepl(cond2, ind), cond2, cond1))
+  # Plot
+  ggplot(dat_aa_log2) +
+    geom_boxplot(aes(x = ind, y = values, fill = type)) +
+    scale_fill_manual(values = c("#66c2a5", "grey" )) +
+    labs(title = "", x = "Sample Names", y = "log2 center counts") +
+    theme_bw()
+}
+
+```
+
+# boxplot
+
+```{r pressure, echo=FALSE}
+
+
+pdf("boxplot_atacpeaks.pdf")
+boxplot_ptch(UP_peaks_rna[22:25], "NT", "GFP") + ggtitle("Expression of UP ATAC-seq peaks")
+boxplot_rnaseq(DOWN_peaks_rna[22:25], "NT", "GFP") + ggtitle("Expression of DOWN ATAC-seq peaks")
+boxplot_rnaseq(ALL_peaks_rna[22:25], "NT", "GFP") + ggtitle("Expression of ALL ATAC-seq peaks")
+dev.off()
+
+
+
+```
+
+
+
