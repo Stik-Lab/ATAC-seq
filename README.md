@@ -3,23 +3,27 @@
 This repository contains a complete ATAC-seq analysis pipeline designed for SLURM environments using Bash scripts.
 
 ## Contents
-- Quality Control with FastQC
-- Adapter Trimming with Trim Galore
-- Alignment with Bowtie2
-- Filtering, Deduplication, Blacklist Removal
-- Peak Calling with MACS2
-- Signal Tracks with deepTools
+- Pre-procesing Step-by-Step Description (link)
+   - Quality Control with FastQC
+   - Adapter Trimming with Trim Galore
+   - Alignment with Bowtie2
+   - Filtering, Deduplication, Blacklist Removal
+   - Peak Calling with MACS2
+   - Signal Tracks with deepTools
+- Differential Accessible Analysis
+- Motif Analysis
 
-## How to Run
+
+
+## Pre-procesing Step-by-Step Description
+
+### How to Run
 
 1. Modify the variables inside `pipeline.sh` with your paths and sample names.
 2. Submit to SLURM:
    ```bash
-   sbatch pipeline.sh
+   sbatch ATAC_PIPELINE.sh
    ```
-
-## Pre-procesing Step-by-Step Description
-
 ### 1. Quality Control (FastQC)
 Runs a quality control check on the raw FASTQ files.
 
