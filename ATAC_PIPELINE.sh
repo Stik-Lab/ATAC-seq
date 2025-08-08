@@ -5,7 +5,7 @@
 #SBATCH --time=48:00:00
 #SBATCH --cpus-per-task=8
 #SBATCH --output=atac_pipeline_%A-%a.log
-#SBATCH --array=1-X
+#SBATCH --array=1-N
 
 # ========== VARIABLES ==========
 describer_list=(X)  # Replace X with actual sample names
