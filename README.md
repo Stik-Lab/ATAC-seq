@@ -9,7 +9,7 @@ This repository contains a complete ATAC-seq analysis pipeline designed for SLUR
     <li>
       <a href="Pre-procesing-Step-by-Step-Description">Pre-procesing Step-by-Step Description</a>
       <ul>
-         <li><a href="1.-Quality-Control-(FastQC)">1. Quality Control (FastQC)</a></li>
+         <li><a href="1.Quality Control (FastQC)">1. Quality Control (FastQC)</a></li>
          <li><a href="2.-Adapter-Trimming-(Trim Galore)">2. Adapter Trimming (Trim Galore)</a></li>
          <li><a href="3.-Alignment-(Bowtie2)">3.-Alignment-(Bowtie2)-(FastQC)</a></li>
          <li><a href="4.-SAM-to-BAM-Conversion-and-Sorting-(SAMtools)">4. SAM to BAM Conversion and Sorting (SAMtools)</a></li>
