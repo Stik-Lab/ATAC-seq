@@ -25,9 +25,10 @@ This repository contains a complete ATAC-seq analysis pipeline designed for SLUR
     <li><a href="#motif-analysis-description">Motif Analysis Description</a></li>
   </ol>
 </details>
+
    
 <!-- Pre-procesing Step-by-Step Description -->
-## Pre-procesing Step-by-Step Description
+## Pre-processing Step-by-Step Description
 
 ### How to Run
 
@@ -198,7 +199,7 @@ Arguments:
 
 
 
-## Motif Analysis Descirption
+## Motif Analysis Description
 
 
 
