@@ -2,19 +2,35 @@
 
 This repository contains a complete ATAC-seq analysis pipeline designed for SLURM environments using Bash scripts.
 
-## Contents
-- Pre-procesing Step-by-Step Description (link)
-   - Quality Control with FastQC
-   - Adapter Trimming with Trim Galore
-   - Alignment with Bowtie2
-   - Filtering, Deduplication, Blacklist Removal
-   - Peak Calling with MACS2
-   - Signal Tracks with deepTools
-- Differential Accessible Analysis
-- Motif Analysis
-
-
-
+<!-- TABLE OF CONTENTS -->
+<details>
+  <summary>Table of Contents</summary>
+  <ol>
+    <li>
+      <a href="Pre-procesing-Step-by-Step-Description">Pre-procesing Step-by-Step Description</a>
+      <ul>
+         <li><a href="1.-Quality-Control-(FastQC)">1. Quality Control (FastQC)</a></li>
+         <li><a href="2.-Adapter-Trimming-(Trim Galore)">2. Adapter Trimming (Trim Galore)</a></li>
+         <li><a href="3.-Alignment-(Bowtie2)">3.-Alignment-(Bowtie2)-(FastQC)</a></li>
+         <li><a href="4.-SAM-to-BAM-Conversion-and-Sorting-(SAMtools)">4. SAM to BAM Conversion and Sorting (SAMtools)</a></li>
+         <li><a href="5.-Remove-Mitochondrial-Reads-(chrM)">5. Remove Mitochondrial Reads (chrM)</a></li>
+         <li><a href="6.-Filter-Low-Quality-Reads">6. Filter Low-Quality Reads</a></li>
+         <li><a href="7.-Remove-Duplicates-(Picard)>7. Remove Duplicates (Picard)</a></li>
+         <li><a href="8.-Remove-Blacklist-Regions-(bedtools)">8. Remove Blacklist Regions (bedtools)</a></li>
+         <li><a href="9.-Generate-Signal-Tracks-(deepTools)">9. Generate Signal Tracks (deepTools)</a></li>
+         <li><a href="10.-Peak-Calling-(MACS2)">10. Peak Calling (MACS2)</a></li>
+      </ul>
+      </li>
+    <li>
+      <a href="Differential-Accessibility-Analysis-Description">Differential Accessibility Analysis Description</a>
+       </li>
+    <li>
+      <a href="Motif-Analysis-Descirption">Motif Analysis Descirption</a>
+       </ul>
+        </ol>
+</details>
+   
+<!-- Pre-procesing Step-by-Step Description -->
 ## Pre-procesing Step-by-Step Description
 
 ### How to Run
