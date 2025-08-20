@@ -7,27 +7,23 @@ This repository contains a complete ATAC-seq analysis pipeline designed for SLUR
   <summary>Table of Contents</summary>
   <ol>
     <li>
-      <a href="Pre-procesing-Step-by-Step-Description">Pre-procesing Step-by-Step Description</a>
+      <a href="#pre-processing-step-by-step-description">Pre-processing Step-by-Step Description</a>
       <ul>
-         <li><a href="1.Quality Control (FastQC)">1. Quality Control (FastQC)</a></li>
-         <li><a href="2.-Adapter-Trimming-(Trim Galore)">2. Adapter Trimming (Trim Galore)</a></li>
-         <li><a href="3.-Alignment-(Bowtie2)">3.-Alignment-(Bowtie2)-(FastQC)</a></li>
-         <li><a href="4.-SAM-to-BAM-Conversion-and-Sorting-(SAMtools)">4. SAM to BAM Conversion and Sorting (SAMtools)</a></li>
-         <li><a href="5.-Remove-Mitochondrial-Reads-(chrM)">5. Remove Mitochondrial Reads (chrM)</a></li>
-         <li><a href="6.-Filter-Low-Quality-Reads">6. Filter Low-Quality Reads</a></li>
-         <li><a href="7.-Remove-Duplicates-(Picard)>7. Remove Duplicates (Picard)</a></li>
-         <li><a href="8.-Remove-Blacklist-Regions-(bedtools)">8. Remove Blacklist Regions (bedtools)</a></li>
-         <li><a href="9.-Generate-Signal-Tracks-(deepTools)">9. Generate Signal Tracks (deepTools)</a></li>
-         <li><a href="10.-Peak-Calling-(MACS2)">10. Peak Calling (MACS2)</a></li>
+        <li><a href="#1-quality-control-fastqc">1. Quality Control (FastQC)</a></li>
+        <li><a href="#2-adapter-trimming-trim-galore">2. Adapter Trimming (Trim Galore)</a></li>
+        <li><a href="#3-alignment-bowtie2">3. Alignment (Bowtie2)</a></li>
+        <li><a href="#4-sam-to-bam-conversion-and-sorting-samtools">4. SAM to BAM Conversion and Sorting (SAMtools)</a></li>
+        <li><a href="#5-remove-mitochondrial-reads-chrm">5. Remove Mitochondrial Reads (chrM)</a></li>
+        <li><a href="#6-filter-low-quality-reads">6. Filter Low-Quality Reads</a></li>
+        <li><a href="#7-remove-duplicates-picard">7. Remove Duplicates (Picard)</a></li>
+        <li><a href="#8-remove-blacklist-regions-bedtools">8. Remove Blacklist Regions (bedtools)</a></li>
+        <li><a href="#9-generate-signal-tracks-deeptools">9. Generate Signal Tracks (deepTools)</a></li>
+        <li><a href="#10-peak-calling-macs2">10. Peak Calling (MACS2)</a></li>
       </ul>
-      </li>
-    <li>
-      <a href="Differential-Accessibility-Analysis-Description">Differential Accessibility Analysis Description</a>
-       </li>
-    <li>
-      <a href="Motif-Analysis-Descirption">Motif Analysis Descirption</a>
-       </ul>
-        </ol>
+    </li>
+    <li><a href="#differential-accessibility-analysis-description">Differential Accessibility Analysis Description</a></li>
+    <li><a href="#motif-analysis-description">Motif Analysis Description</a></li>
+  </ol>
 </details>
    
 <!-- Pre-procesing Step-by-Step Description -->
@@ -52,7 +48,8 @@ fastqc sample.fastq.gz -o output_directory
 Arguments:
 
 - sample.fastq.gz: Input FASTQ file
-- -o: Output directory 
+- -o: Output directory
+
 
 
 ### 2. Adapter Trimming (Trim Galore)
