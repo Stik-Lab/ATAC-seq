@@ -22,6 +22,10 @@ This repository contains a complete ATAC-seq analysis pipeline designed for SLUR
       </ul>
     </li>
     <li><a href="#differential-accessibility-analysis-description">Differential Accessibility Analysis Description</a></li>
+    <ul>
+      <li><a href="#1.-peak-quantification-(multicov.sh)">1. Peak quantification (multicov.sh)</a></li>
+      <li><a href="#2.-differential-analysis-and-visualization-(atac_diffanalysis.rmd)">2. Differential analysis and visualization (ATAC_diffanalysis.Rmd)</a></li>
+    <ul>
     <li><a href="#motif-analysis-description">Motif Analysis Description</a></li>
   </ol>
 </details>
@@ -196,6 +200,36 @@ Arguments:
 - --outdir: Output directory for peak files
 
 ## Differential Accessibility Analysis Description
+
+Differential accessibility analysis is the process of identifying genomic regions (peaks) that show significant differences in chromatin accessibility between two or more biological conditions. In ATAC-seq or other chromatin profiling experiments, “accessibility” reflects how open or closed a region of chromatin is, which can influence transcription factor binding and gene regulation.
+
+By comparing read counts across conditions, we can detect differentially accessible peaks that are either more open (*up*) or more closed (*down*).
+
+This analysis is divided into two main steps:
+
+### 1. Peak quantification (multicov.sh)
+
+- All peak files (*_peaks.narrowPeak) are merged and sorted into a consensus peak set.
+- For each BAM file (*_clean.bam), read counts are quantified across the merged peaks using bedtools multicov.
+- The output file serves as the input for downstream differential accessibility analysis in R.
+
+### 2. Differential analysis and visualization (ATAC_diffanalysis.Rmd)
+
+- The peak count matrix is imported into DESeq2 with sample condition metadata.
+- Differential accessibility is estimated (log2 fold change, p-values, FDR).
+- Quality control: variance stabilizing transformation (VST) and PCA clustering.
+- Visualizations: volcano plots and boxplots of accessibility changes.
+- Annotation: significant peaks are mapped to genes with ChIPseeker.
+- Functional analysis: enriched biological processes are identified using enrichR (GO terms).
+
+#### Outputs
+
+- Merged peak set (*.bed)
+- Normalized counts and DESeq2 results (resultsX.tab)
+- PCA plot (pca_X.pdf)
+- Volcano plot (volcano_X.pdf)
+- Peak annotation files (UP_peaks.bed, DOWN_peaks.bed, ALL_peaks.bed)
+- GO enrichment plots
 
 
 
