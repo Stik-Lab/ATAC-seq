@@ -9,7 +9,6 @@ This repository contains a complete ATAC-seq analysis pipeline designed for SLUR
     <li>
       <a href="#pre-processing-step-by-step-description">Pre-processing Step-by-Step Description</a>
       <ul>
-        <li><a href="#input-files">Input files</a></li>
         <li><a href="#1-quality-control-fastqc">1. Quality Control (FastQC)</a></li>
         <li><a href="#2-adapter-trimming-trim-galore">2. Adapter Trimming (Trim Galore)</a></li>
         <li><a href="#3-alignment-bowtie2">3. Alignment (Bowtie2)</a></li>
@@ -20,26 +19,21 @@ This repository contains a complete ATAC-seq analysis pipeline designed for SLUR
         <li><a href="#8-remove-blacklist-regions-bedtools">8. Remove Blacklist Regions (bedtools)</a></li>
         <li><a href="#9-generate-signal-tracks-deeptools">9. Generate Signal Tracks (deepTools)</a></li>
         <li><a href="#10-peak-calling-macs2">10. Peak Calling (MACS2)</a></li>
-        <li><a href="#output-files">Output files</a></li>
       </ul>
     </li>
     <li>
       <a href="#motif-analysis-description">Motif Analysis Description</a>
       <ul>
-        <li><a href="#input-files">Input files</a></li>
         <li><a href="#how-to-run">How to Run</a></li>
         <li><a href="#step-by-step-description">Step-by-Step Description</a></li>
-        <li><a href="#output-files">Output files</a></li>
       </ul>
     </li>
     <li>
       <a href="#differential-accessibility-analysis-description">Differential Accessibility Analysis Description</a>
       <ul>
-        <li><a href="#input-files">Input files</a></li>
         <li><a href="#how-to-run">How to Run</a></li>
         <li><a href="#1-peak-quantification-multicovsh">1. Peak quantification (multicov.sh)</a></li>
         <li><a href="#2-differential-analysis-and-visualization-atac_diffanalysisrmd">2. Differential analysis and visualization (ATAC_diffanalysis.Rmd)</a></li>
-        <li><a href="#output-files">Output files</a></li>
       </ul>
     </li>
   </ol>
