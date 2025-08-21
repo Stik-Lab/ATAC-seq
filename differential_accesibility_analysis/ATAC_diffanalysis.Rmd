@@ -1,5 +1,5 @@
 
-# Load libraries and data
+# Load libraries
 
 ```{r}
 
@@ -11,18 +11,18 @@ library(ChIPseeker)
 library(TxDb.Hsapiens.UCSC.hg38.knownGene)
 
 ```
-
+# Import multicov output
 
 ```{r}
-# import multicov output
-cov_ATACpeaks = read.table(".bed",
+# Replace "file.bed" with your actual multicov output file
+cov_ATACpeaks = read.table("file.bed.bed",
                            sep = "\t")
 
-# annotate peaks
+# Create unique peak IDs
 cov_ATACpeaks$peak = paste0("peak_", seq(1, nrow(cov_ATACpeaks)))
 rownames(cov_ATACpeaks) = cov_ATACpeaks$peak
 
-# annotate conditions and create deseq2 object
+# Annotate conditions and create DESeq2 objec
 condition = c( "X", "X", "Y", "Y")
 sampleinfo = data.frame(row.names=c("X_1", "X_2", "Y_1", "Y_2"), condition)
 
@@ -30,16 +30,16 @@ ddsObj<- DESeqDataSetFromMatrix(countData = cov_ATACpeaks,
                                 colData = sampleinfo, 
                                 design = ~ condition)
 
+# Set reference level
 ddsObj$condition <- relevel(ddsObj$condition, ref= 'X')
 
 ```
 
-# generate pca
+# PCA plot
 
 ```{r}
 
-# first normalize the data
-dds_norm1 <- vst(ddsObj)
+dds_norm1 <- vst(ddsObj) # VST normalization
 
 pdf("pca_X.pdf")
 plotPCA(dds_norm1, intgroup = "condition") + theme_bw()
@@ -47,24 +47,27 @@ dev.off()
 
 ```
 
-# generate results dataframe
+# Differential accessibility analysis
 
 ```{r pressure, echo=FALSE}
 
-# generate deseq2 results
+# Generate DESeq2 results
 dds <- DESeq(ddsObj)  
 res <- results(dds, alpha=0.05)
 
-# create dataframe with deseq2 results and normalize counts
+# Merge DESeq2 results with normalized counts
 df_results <- merge(as.data.frame(res),
                       as.data.frame(counts(dds, normalized=TRUE)),
                       by="row.names", sort=FALSE)
 
-# add the peak positions and raw counts
+# Rename peak ID column
 colnames(df_results)[1] <- "peak"
+
+# Add original peak positions and RAW counts
 df_results = merge(df_results, cov_ATACpeaks, by = "peak")
 summary(res)
 
+# Add classification columns
 df_results<-mutate(df_results, 
                           direction = ifelse(log2FoldChange>0, "up","down"), 
                           stat_diff = ifelse(pvalue<0.05, "signf", "no_signf"),
@@ -75,65 +78,69 @@ df_results$diffexpressed <- "NO"
 df_results$diffexpressed[df_results$log2FoldChange > 1 & df_results$padj < 0.05] <- "UP" 
 df_results$diffexpressed[df_results$log2FoldChange < -1 & df_results$padj < 0.05] <- "DOWN"
 
-# save results into a table
+# Save results
 write.table(df_results, "resultsX.tab",
             quote = F,
             )
 
 ```
 
-# volcano plot function
+# Volcano plot function
 
 ```{r pressure, echo=FALSE}
 
-volcano_rna <- function(df,
+volcano_ptch <- function(df,
                         gene_column = gene_column,
                         colors = colors,
                         number_genes = number_genes,
                         title = title) {
   gene_column <- as.character(gene_column)
   df$log2FoldChange <- as.numeric(as.character(df$log2FoldChange))
-  df$delabel <- NA
   df$pvalue <- as.numeric(as.character(df$pvalue))
+
+  # Remove rows with missing values
+  df <- df[!is.na(df$pvalue) & !is.na(df$log2FoldChange), ]
+
+  df$delabel <- NA
+
   top_genes <- head(df[order(df$pvalue), gene_column], number_genes)
   df$delabel <- ifelse(df[[gene_column]] %in% top_genes, df[[gene_column]], NA)
 
   title <- title
 
-  ggplot(data=df, aes(x=log2FoldChange, y=-log10(pvalue), col=diffexpressed)) +
+  ggplot(data=df, aes(x=log2FoldChange, y=-log10(pvalue), col=diffexpressed, label=delabel)) +
     geom_point(alpha = 0.5) +
-
-    scale_color_manual(values = colors,
-                       labels = c("DOWN peaks", "Not significant", "UP peaks")) +
-    labs(title = title, x = "Log2 Fold Change", y = "-Log10 pvalue") +
-   # geom_vline(xintercept= 0 , col="black", linetype = 'dashed') +
-    theme_minimal() +
+    geom_text_repel() +
+    scale_color_manual(values = colors) +
+    labs(title = title, x = "Log2 Fold Change", y = "-Log10 P-value") +
+    geom_vline(xintercept=c(-1, 1), col="black", linetype = 'dashed') +
+    theme_classic() +
     geom_hline(yintercept=-log10(0.05), col="black", linetype = 'dashed') +
     ggtitle(title)
-
 }
 
 ```
 
-# volcano plot
+# Volcano plot
 
-```{r pressure, echo=FALSE}
+```{r}
 
 pdf("volcano_X.pdf")
-volcano_rna(df_results, "peak", c("blue", "grey", "red"), 10, "Volcano Plot of Differentially Accessible Peaks" ) + theme_classic()
+volcano_rna(df_results, "peak", c("blue", "grey", "red"), 5, "Volcano Plot of Differentially Accessible Peaks" ) + theme_classic()
 dev.off()
 
 ```
 
-# annotate peaks with chipseeker
+# Peak annotation with ChIPseeker
 
-```{r pressure, echo=FALSE}
+```{r}
 
 txdb <- TxDb.Hsapiens.UCSC.hg38.knownGene
 
 up_peaks <- subset(df_results, diffexpressed == "UP")
 down_peaks <- subset(df_results, diffexpressed == "DOWN")
 
+# Save BED files
 write.table(up_peaks[12:14], "UP_peaks.bed",
             sep = "\t",
             quote = FALSE,
@@ -161,7 +168,7 @@ peakAnno_down_df = as.data.frame(peakAnno_down)
 
 ```
 
-# GO function
+# Gene Ontology enrichment
 
 ```{r}
 
@@ -217,29 +224,11 @@ print(y)
 
 ```
 
-# GO
-
-```{r}
-
-GO_up <- createdfforGO_ptch(peakAnno_up_df)
-GO_down <- createdfforGO_ptch(peakAnno_down_df)
-
-pdf("GO.pdf", width = 13, height = 10)
-
-createPLOTGO_ptch(GO_up, "Gene Ontology of UP-regulated ATAC-seq Genes")
-createPLOTGO_ptch(GO_down, "Gene Ontology of DOWN-regulated ATAC-seq Genes")
-
-dev.off()
-
-
-```
-
-# boxplot function
+# Boxplot function
 
 ```{r}
 boxplot_ptch <- function(counts_df = counts_df, cond1, cond2) {
-  # Define headers
-
+  # Convert to numeric
   convert_to_numeric_df <- function(df) {
     df[] <- lapply(df, function(x) as.numeric(as.character(x)))
     return(df)
@@ -272,7 +261,7 @@ boxplot_ptch <- function(counts_df = counts_df, cond1, cond2) {
 
 ```
 
-# boxplot
+# Boxplots
 
 ```{r pressure, echo=FALSE}
 
@@ -282,6 +271,24 @@ boxplot_ptch(down_peaks[8:11], "X", "Y") + ggtitle("DOWN ATAC-seq peaks")
 dev.off()
 
 ```
+# GO
+
+```{r}
+
+GO_up <- createdfforGO_ptch(peakAnno_up_df)
+GO_down <- createdfforGO_ptch(peakAnno_down_df)
+
+pdf("GO.pdf", width = 13, height = 10)
+
+createPLOTGO_ptch(GO_up, "Gene Ontology of UP-regulated ATAC-seq Genes")
+createPLOTGO_ptch(GO_down, "Gene Ontology of DOWN-regulated ATAC-seq Genes")
+
+dev.off()
+
+
+```
+
+
 
 
 
