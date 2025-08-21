@@ -1,9 +1,3 @@
----
-title: "Differential analysis of Chromatin Accessiblity"
-author: "Estel Ferré"
-date: "2025-08-04"
-output: html_document
----
 
 # Load libraries and data
 
@@ -20,13 +14,15 @@ library(TxDb.Hsapiens.UCSC.hg38.knownGene)
 
 
 ```{r}
-
+# import multicov output
 cov_ATACpeaks = read.table(".bed",
                            sep = "\t")
 
+# annotate peaks
 cov_ATACpeaks$peak = paste0("peak_", seq(1, nrow(cov_ATACpeaks)))
 rownames(cov_ATACpeaks) = cov_ATACpeaks$peak
 
+# annotate conditions and create deseq2 object
 condition = c( "X", "X", "Y", "Y")
 sampleinfo = data.frame(row.names=c("X_1", "X_2", "Y_1", "Y_2"), condition)
 
@@ -41,8 +37,8 @@ ddsObj$condition <- relevel(ddsObj$condition, ref= 'X')
 # generate pca
 
 ```{r}
-# NORMALIZATION 
 
+# first normalize the data
 dds_norm1 <- vst(ddsObj)
 
 pdf("pca_X.pdf")
@@ -55,15 +51,19 @@ dev.off()
 
 ```{r pressure, echo=FALSE}
 
-results <- DESeq(ddsObj)
-results <- results(results, alpha=0.05)
-df_results = as.data.frame(results)
-df_results$peak = rownames(df_results)
-summary(results)
+# generate deseq2 results
+dds <- DESeq(ddsObj)  
+res <- results(dds, alpha=0.05)
 
+# create dataframe with deseq2 results and normalize counts
+df_results <- merge(as.data.frame(res),
+                      as.data.frame(counts(dds, normalized=TRUE)),
+                      by="row.names", sort=FALSE)
+
+# add the peak positions and raw counts
+colnames(df_results)[1] <- "peak"
 df_results = merge(df_results, cov_ATACpeaks, by = "peak")
-
-df_results$symbol = mapIds(org.Hs.eg.db, keys = df_results$ensembl, keytype = 'ENSEMBL', column = 'SYMBOL')
+summary(res)
 
 df_results<-mutate(df_results, 
                           direction = ifelse(log2FoldChange>0, "up","down"), 
@@ -74,10 +74,8 @@ df_results<-mutate(df_results,
 df_results$diffexpressed <- "NO"
 df_results$diffexpressed[df_results$log2FoldChange > 1 & df_results$padj < 0.05] <- "UP" 
 df_results$diffexpressed[df_results$log2FoldChange < -1 & df_results$padj < 0.05] <- "DOWN"
-df_results$ensembl_gene_id <- rownames(df_results)
 
-View(df_results)
-
+# save results into a table
 write.table(df_results, "resultsX.tab",
             quote = F,
             )
@@ -122,34 +120,26 @@ volcano_rna <- function(df,
 ```{r pressure, echo=FALSE}
 
 pdf("volcano_X.pdf")
-volcano_rna(df_results, "peak", c("blue", "grey", "red"), 10, "Volcano plot differential accessiblity peaks deseq2" ) + theme_classic()
+volcano_rna(df_results, "peak", c("blue", "grey", "red"), 10, "Volcano Plot of Differentially Accessible Peaks" ) + theme_classic()
 dev.off()
 
 ```
 
-# peak annotation
+# annotate peaks with chipseeker
 
 ```{r pressure, echo=FALSE}
 
 txdb <- TxDb.Hsapiens.UCSC.hg38.knownGene
+
 up_peaks <- subset(df_results, diffexpressed == "UP")
 down_peaks <- subset(df_results, diffexpressed == "DOWN")
 
-
-all_peaks <- df_results[8:10]
-all_peaks$diffexpresed <- df_results$diffexpressed
-write.table(all_peaks, "ALL_peaks.bed",
+write.table(up_peaks[12:14], "UP_peaks.bed",
             sep = "\t",
             quote = FALSE,
             col.names = FALSE,
             row.names = FALSE)
-
-write.table(up_peaks[8:10], "UP_peaks.bed",
-            sep = "\t",
-            quote = FALSE,
-            col.names = FALSE,
-            row.names = FALSE)
-write.table(down_peaks[8:10], "DOWN_peaks.bed",
+write.table(down_peaks[12:14], "DOWN_peaks.bed",
             sep = "\t",
             quote = FALSE,
             col.names = FALSE,
@@ -157,7 +147,7 @@ write.table(down_peaks[8:10], "DOWN_peaks.bed",
 
 peak_file_up <- readPeakFile("UP_peaks.bed")
 peak_file_down <- readPeakFile("DOWN_peaks.bed")
-peak_file_all <- readPeakFile("ALL_peaks.bed")
+
 
 peakAnno_up <- annotatePeak(peak_file_up, tssRegion=c(-3000, 3000),
                          TxDb=txdb, annoDb="org.Hs.eg.db")
@@ -168,24 +158,19 @@ peakAnno_all <- annotatePeak(peak_file_all, tssRegion=c(-3000, 3000),
 
 peakAnno_up_df = as.data.frame(peakAnno_up)
 peakAnno_down_df = as.data.frame(peakAnno_down)
-peakAnno_all_df = as.data.frame(peakAnno_all)
-
-peakAnno = rbind(peakAnno_up_df, peakAnno_down_df)
 
 ```
-
-###### ON PROCES
 
 # GO function
 
 ```{r}
 
-createdfforGO <- function(df) {
+createdfforGO_ptch <- function(df) {
   
   library(enrichR)
 
 dbs <- listEnrichrDbs()  
-dbs <- c("GO_Biological_Process_2023")
+dbs <- c("GO_Biological_Process_2025")
 
   enriched <- enrichr(as.vector(df$SYMBOL), dbs)
   enriched[[1]] <- enriched[[1]] %>%
@@ -198,7 +183,7 @@ dbs <- c("GO_Biological_Process_2023")
 }
 
 
-createPLOTGO <- function(df2, title) {
+createPLOTGO_ptch <- function(df2, title) {
   library(ggplot2)
   library(grid)  
   library(gridExtra)
@@ -230,20 +215,20 @@ print(y)
 
 }
 
-
-
-
 ```
 
 # GO
 
 ```{r}
 
-library(enrichR)
-GO <- createdfforGO(peakAnno_loopstime_df_0h)
+GO_up <- createdfforGO_ptch(peakAnno_up_df)
+GO_down <- createdfforGO_ptch(peakAnno_down_df)
 
-pdf("0hloopscutNPM1cpks.pdf", width = 13, height = 10)
-createPLOTGO(GO_0h_chippks, "GO")
+pdf("GO.pdf", width = 13, height = 10)
+
+createPLOTGO_ptch(GO_up, "Gene Ontology of UP-regulated ATAC-seq Genes")
+createPLOTGO_ptch(GO_down, "Gene Ontology of DOWN-regulated ATAC-seq Genes")
+
 dev.off()
 
 
@@ -261,26 +246,24 @@ boxplot_ptch <- function(counts_df = counts_df, cond1, cond2) {
   }
 
   counts_df <- convert_to_numeric_df(counts_df)
-  aa_edge <- as.matrix(counts_df)
+  counts <- as.matrix(counts_df)
 
   # Log2 transformation
-  aa_log2 <- log2(aa_edge + 1)  # Add 1 to avoid log2(0) issues
+  counts_log2 <- log2(counts + 1)  # Add 1 to avoid log2(0) issues
 
   # Centering
-  aa_log2_c <- function(x) {
-    scale(t(aa_log2), scale = FALSE)
+  counts_log2_c <- function(x) {
+    scale(t(counts_log2), scale = FALSE)
   }
-  counts_centralized_aa_log2 <- t(aa_log2_c(aa_log2))
-  aa_log2_center <- counts_centralized_aa_log2
+  counts_centralized_counts_log2 <- t(counts_log2_c(counts_log2))
+  counts_log2_center <- counts_centralized_counts_log2
 
   # Prepare data for boxplot
-  dat_aa_log2 <- stack(as.data.frame(aa_log2_center))
-  #dat_aa_log2 <- dat_aa_log2 %>%
-  #  mutate(type = ifelse(ind %in% cond2*, cond2, cond1))
-  dat_aa_log2 <- dat_aa_log2 %>%
+  dat_counts_log2 <- stack(as.data.frame(counts_log2_center))
+  dat_counts_log2 <- dat_counts_log2 %>%
     mutate(type = ifelse(grepl(cond2, ind), cond2, cond1))
   # Plot
-  ggplot(dat_aa_log2) +
+  ggplot(dat_counts_log2) +
     geom_boxplot(aes(x = ind, y = values, fill = type)) +
     scale_fill_manual(values = c("#66c2a5", "grey" )) +
     labs(title = "", x = "Sample Names", y = "log2 center counts") +
@@ -293,14 +276,10 @@ boxplot_ptch <- function(counts_df = counts_df, cond1, cond2) {
 
 ```{r pressure, echo=FALSE}
 
-
-pdf("boxplot_atacpeaks.pdf")
-boxplot_ptch(UP_peaks_rna[22:25], "NT", "GFP") + ggtitle("Expression of UP ATAC-seq peaks")
-boxplot_rnaseq(DOWN_peaks_rna[22:25], "NT", "GFP") + ggtitle("Expression of DOWN ATAC-seq peaks")
-boxplot_rnaseq(ALL_peaks_rna[22:25], "NT", "GFP") + ggtitle("Expression of ALL ATAC-seq peaks")
+pdf("boxplot_ATACpks.pdf")
+boxplot_ptch(up_peaks[8:11], "X", "Y") + ggtitle("UP ATAC-seq peaks")
+boxplot_ptch(down_peaks[8:11], "X", "Y") + ggtitle("DOWN ATAC-seq peaks")
 dev.off()
-
-
 
 ```
 
