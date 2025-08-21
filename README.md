@@ -34,9 +34,15 @@ This repository contains a complete ATAC-seq analysis pipeline designed for SLUR
 <!-- Pre-procesing Step-by-Step Description -->
 ## Pre-processing Step-by-Step Description
 
+### Input files
+
+- Raw paired-end FASTQ files (sample_1.fastq.gz, sample_2.fastq.gz)
+- Reference genome index for Bowtie2.
+- Blacklist BED file (genomic regions to exclude)
+
 ### How to Run
 
-1. Modify the variables inside `pipeline.sh` with your paths and sample names.
+1. Modify the variables inside `ATAC_PIPELINE.sh` with your paths and sample names.
 2. Submit to SLURM:
    ```bash
    sbatch ATAC_PIPELINE.sh
@@ -44,13 +50,13 @@ This repository contains a complete ATAC-seq analysis pipeline designed for SLUR
 ### 1. Quality Control (FastQC)
 Runs a quality control check on the raw FASTQ files.
 
-Command:
+#### Command line:
 
 ```bash
 fastqc sample.fastq.gz -o output_directory
 
 ```
-Arguments:
+#### Arguments:
 
 - sample.fastq.gz: Input FASTQ file
 - -o: Output directory
@@ -60,13 +66,13 @@ Arguments:
 ### 2. Adapter Trimming (Trim Galore)
 Removes adapters and low-quality bases from paired-end FASTQ files.
 
-Command:
+#### Command line:
 
 ```bash
 trim_galore --fastqc --output_dir output_dir --paired sample_1.fastq.gz sample_2.fastq.gz
 
 ```
-Arguments:
+#### Arguments:
 
 - --fastqc: Runs FastQC after trimming
 - --output_dir: Output directory
@@ -76,13 +82,13 @@ Arguments:
 ### 3. Alignment (Bowtie2)
 Aligns trimmed reads to the reference genome.
 
-Command:
+#### Command line:
 
 ```bash
 bowtie2 --very-sensitive -x reference_index --threads 8 -1 sample_1.fq.gz -2 sample_2.fq.gz -S output.sam
 ```
 
-Arguments:
+#### Arguments:
 - --very-sensitive: High-sensitivity alignment
 - -x: Bowtie2 reference index
 - -1, -2: Paired-end FASTQ files
@@ -91,13 +97,13 @@ Arguments:
 ### 4. SAM to BAM Conversion and Sorting (SAMtools)
 Converts the SAM file to a sorted BAM file and creates an index.
 
-Command:
+#### Command line:
 
 ```bash
 samtools view -bS input.sam | samtools sort -T temp_prefix -o output.bam
 samtools index output.bam
 ```
-Arguments:
+#### Arguments:
 
 - view: Converts SAM to BAM
 - sort: Sorts BAM by coordinates
@@ -106,7 +112,7 @@ Arguments:
 ### 5. Remove Mitochondrial Reads (chrM)
 Filters out mitochondrial reads from the BAM file.
 
-Command:
+#### Command:
 
 ```bash
 samtools view -h input.bam | grep -v chrM | samtools sort -O bam -o output.bam -T temp_prefix
@@ -116,13 +122,13 @@ samtools view -h input.bam | grep -v chrM | samtools sort -O bam -o output.bam -
 ### 6. Filter Low-Quality Reads
 Removes low-quality and non-primary/duplicate reads.
 
-Command:
+#### Command line:
 
 ```bash
 samtools view -F 2304 -b -q 10 input.bam > output.bam
 
 ```
-Arguments:
+#### Arguments:
 
 - -F 2304: Filters out non-primary and duplicate reads
 - -q 10: Minimum mapping quality
@@ -130,7 +136,7 @@ Arguments:
 ### 7. Remove Duplicates (Picard)
 Marks and removes PCR duplicates.
 
-Command:
+#### Command line:
 
 ```bash
 java -jar picard.jar MarkDuplicates \
@@ -139,20 +145,33 @@ java -jar picard.jar MarkDuplicates \
   M=metrics.txt \
   REMOVE_DUPLICATES=true
 ```
+#### Arguments:
+- I → Input BAM file (input.bam) 
+- O → Output BAM file after duplicate removal (dedup.bam)
+- M → Metrics file reporting duplication statistics (metrics.txt)
+- REMOVE_DUPLICATES=true → Removes duplicates instead of just marking them
+
 
 ### 8. Remove Blacklist Regions (bedtools)
 Filters out reads mapping to blacklisted genomic regions.
 
-Command:
+#### Command line:
 
 ```bash
 bedtools intersect -nonamecheck -v -abam input.bam -b blacklist.bed > clean.bam
 samtools index clean.bam
 ```
+#### Arguments (bedtools intersect):
+- -nonamecheck → Ignores mismatches between sequence names in the BAM and BED files
+- -v → Reports entries in input.bam that have no overlap with blacklist.bed
+- -abam input.bam → Input BAM file
+- -b blacklist.bed → BED file of regions to exclude
+
+
 ### 9. Generate Signal Tracks (deepTools)
 Creates a normalized bigWig file for visualization.
 
-Command:
+#### Command line:
 
 ```bash
 bamCoverage \
@@ -163,7 +182,7 @@ bamCoverage \
   --binSize 1 \
   --normalizeUsing RPGC
 ```
-Arguments:
+#### Arguments:
 
 - --bam: Input BAM file (cleaned, filtered, and deduplicated)
 - --outFileName: Output bigWig file name
@@ -176,7 +195,7 @@ Arguments:
 ### 10. Peak Calling (MACS2)
 Identifies open chromatin regions (peaks) from the cleaned BAM.
 
-Command:
+#### Command line:
 
 ```bash
 macs2 callpeak \
@@ -189,7 +208,7 @@ macs2 callpeak \
   --outdir peak_output
 ```
 
-Arguments:
+#### Arguments:
 
 - --format BAMPE: Specifies paired-end BAM format
 - -t: Input treatment BAM file (clean.bam)
@@ -199,11 +218,96 @@ Arguments:
 - -q 0.05: FDR cutoff for peak detection (q-value) 
 - --outdir: Output directory for peak files
 
+### Outputs
+
+- FastQC quality reports (.html, .zip)
+- Trimmed FASTQ files
+- Alignment files (.sam, .bam, .bai)
+- Filtered and deduplicated BAM files (clean.bam, dedup.bam)
+- Duplicate metrics (metrics.txt)
+- Normalized signal tracks (.bw)
+- Peak calling results from MACS2 (.narrowPeak, .xls, .bdg, etc.)
+
+## Motif Analysis Description
+
+This pipeline identifies transcription factor motifs using that show differential binding footprints between two ATAC-seq conditions, providing insight into regulatory drivers of chromatin accessibility changes. This pipeline uses TOBIAS to performing this analysis, taking BAM files ans a merged set of accessible peaks.
+
+### Input files
+
+- Merged peaks file: mergedpks.bed
+  - Contains the consensus accessible regions across all samples.
+    
+*Command line to generate a merged peak file.*
+
+```bash
+cat *_peaks.narrowPeak | bedtools merge | bedtools sort > ${describer}pk.merged.sort.bed
+```
+
+- BAM files: {cond1}_clean.bam and {cond2}_clean.bam
+  - Cleaned, deduplicated, and properly indexed ATAC-seq alignments for each condition.
+
+- Reference genome: genome.fa
+  - FASTA file of the reference genome (must match BAM alignment).
+
+- Motif database: JASPAR2020_CORE_vertebrates_non-redundant_pfms_jaspar.txt
+  - Position Frequency Matrices (PFMs) used for motif scanning.
+
+
+
+### How to Run
+
+1. Modify the variables inside `tobias_motif_analysis.sh` with your paths and sample names.
+2. Submit to SLURM:
+
+```bash
+sbatch tobias_motif_analysis.sh
+```
+### Step-by-Step Description
+
+#### 1. ATAC correct
+Corrects ATAC-seq signal for Tn5 insertion bias.
+
+```bash
+TOBIAS ATACorrect --bam condX_clean.bam \
+                  --genome genome.fa \
+                  --peaks mergedpks.bed \
+                  --outdir path_tobias \
+                  --cores 8
+```
+
+#### 2. FootprintScores
+Computes footprint scores across the merged peak set.
+
+```bash
+TOBIAS FootprintScores --signal *_corrected.bw \
+                       --regions mergedpks.bed \
+                       --output *_footprints.bw \
+                       --cores 8
+```
+
+#### 3. BINDetect
+
+Performs motif binding site detection using footprint scores and tests for differential TF binding between **cond1** and **cond2**.
+
+```bash
+TOBIAS BINDetect --motifs JASPAR2020_CORE_vertebrates_non-redundant_pfms_jaspar.txt \
+                 --signals cond1_footprints.bw cond2_footprints.bw \
+                 --genome genome.fa \
+                 --peaks mergedpks.bed \
+                 --cond_names cond1 cond2 \
+                 --cores 8 \
+                 --outdir path_tobias
+```
+
 ## Differential Accessibility Analysis Description
 
 Differential accessibility analysis is the process of identifying genomic regions (peaks) that show significant differences in chromatin accessibility between two or more biological conditions. In ATAC-seq or other chromatin profiling experiments, “accessibility” reflects how open or closed a region of chromatin is, which can influence transcription factor binding and gene regulation.
 
-By comparing read counts across conditions, we can detect differentially accessible peaks that are either more open (*up*) or more closed (*down*).
+By comparing read counts between conditions, differentially accessible peaks can be detected, showing regions that are more open in condition 1 (**cond1**) or in condition 2 (**cond2**).
+
+### Input files
+
+### How to Run
 
 This analysis is divided into two main steps:
 
@@ -222,22 +326,22 @@ This analysis is divided into two main steps:
 - Annotation: significant peaks are mapped to genes with ChIPseeker.
 - Functional analysis: enriched biological processes are identified using enrichR (GO terms).
 
-#### Outputs
+### Output files
 
 - Merged peak set (*.bed)
 - Normalized counts and DESeq2 results (resultsX.tab)
 - PCA plot (pca_X.pdf)
 - Volcano plot (volcano_X.pdf)
-- Peak annotation files (UP_peaks.bed, DOWN_peaks.bed, ALL_peaks.bed)
+- Peak annotation files (UP_peaks.bed, DOWN_peaks.bed)
 - GO enrichment plots
 
 
 
-## Motif Analysis Description
 
 
 
 
-Notes
+
+#### Notes
 - Make sure all required modules are loaded or installed in your environment.
 - The pipeline assumes paired-end sequencing data and a pre-built Bowtie2 genome index.
