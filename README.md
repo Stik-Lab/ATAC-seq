@@ -54,9 +54,9 @@ This repository contains a complete ATAC-seq analysis pipeline designed for SLUR
 
 1. Modify the variables inside `ATAC_PIPELINE.sh` with your paths and sample names.
 2. Submit to SLURM:
-   ```bash
-   sbatch ATAC_PIPELINE.sh
-   ```
+```bash
+sbatch ATAC_PIPELINE.sh
+```
 ### 1. Quality Control (FastQC)
 Runs a quality control check on the raw FASTQ files.
 
@@ -64,7 +64,6 @@ Runs a quality control check on the raw FASTQ files.
 
 ```bash
 fastqc sample.fastq.gz -o output_directory
-
 ```
 #### Arguments:
 
@@ -76,11 +75,10 @@ fastqc sample.fastq.gz -o output_directory
 ### 2. Adapter Trimming (Trim Galore)
 Removes adapters and low-quality bases from paired-end FASTQ files.
 
-#### Command line:
+#### Command line
 
 ```bash
 trim_galore --fastqc --output_dir output_dir --paired sample_1.fastq.gz sample_2.fastq.gz
-
 ```
 #### Arguments:
 
@@ -315,27 +313,69 @@ Differential accessibility analysis is the process of identifying genomic region
 
 By comparing read counts between conditions, differentially accessible peaks can be detected, showing regions that are more open in condition 1 (**cond1**) or in condition 2 (**cond2**).
 
+This analysis is divided into two main steps: **(1) peak quantification across samples** and **(2) differential accessibility analysis with visualization and functional annotation**.
+
 ### Input files
 
-### How to Run
-
-This analysis is divided into two main steps:
+- Cleaned BAM files.
+- MACS2 peak files.
 
 ### 1. Peak quantification (multicov.sh)
 
-- All peak files (*_peaks.narrowPeak) are merged and sorted into a consensus peak set.
-- For each BAM file (*_clean.bam), read counts are quantified across the merged peaks using bedtools multicov.
+#### How to run
+
+**1.** Edit the variables inside multicov.sh in the differential accessibility analysis folder to specify your paths and sample names.
+**2.** Submit to SLURM:
+   
+```bash
+sbatch multicov.sh
+```
+#### Step-by-step description
+
+**1.** All peak files (*_peaks.narrowPeak) are merged and sorted into a consensus peak set.
+
+##### Command line
+```bash
+cat ${path_macs2}/*_peaks.narrowPeak | \
+  bedtools merge | \
+  bedtools sort > ${path_output}/${describer}pk.merged.sort.bed
+```
+
+**2.** For each BAM file (*_clean.bam), read counts are quantified across the merged peaks using bedtools multicov.
+   
+##### Command line
+```bash
+bedtools multicov \
+  -bams ${path_bam}/*_clean.bam \
+  -bed ${path_output}/${describer}pk.merged.sort.bed \
+  > ${path_output}/${describer}_coverage.tmp
+```
+  
 - The output file serves as the input for downstream differential accessibility analysis in R.
 
 ### 2. Differential analysis and visualization (ATAC_diffanalysis.Rmd)
 
-- The peak count matrix is imported into DESeq2 with sample condition metadata.
-- Differential accessibility is estimated (log2 fold change, p-values, FDR).
-- Quality control: variance stabilizing transformation (VST) and PCA clustering.
-- Visualizations: volcano plots and boxplots of accessibility changes.
-- Annotation: significant peaks are mapped to genes with ChIPseeker.
-- Functional analysis: enriched biological processes are identified using enrichR (GO terms).
+#### How to Run
 
+**1.** Open RStudio and load the script ATAC_diffanalysis.Rmd.
+**2.** Edit the input file name (replace "file.bed" with your multicov count matrix).
+**3.** Adjust the sample conditions (e.g., X vs. Y) in the metadata section of the script.
+**4.** Run the script step by step (chunk by chunk) in RStudio.
+**5.** At the end, all results and plots will be saved automatically in the working directory.
+
+
+#### Step-by-step description
+
+- **Data import and DESeq2 setup** : The multicov output is read into R, unique peak IDs are generated, and a DESeq2 dataset is constructed with condition metadata.
+- **Normalization and PCA** :  Variance stabilizing transformation (VST) is applied, followed by PCA to assess clustering between conditions.
+- **Differential accessibility analysis**: Using DESeq2, log2 fold changes, p-values, and adjusted FDR values are computed. Results are merged with raw and normalized counts.  
+- **Visualization**:
+  - Volcano plots are generated to highlight significantly up- or down-regulated peaks.
+  - Boxplots compare accessibility changes between conditions.
+- **Peak annotation**: Significant UP and DOWN peaks are annotated relative to nearby genes using ChIPseeker.
+- **Functional analysis**: Annotated gene lists are tested for Gene Ontology (GO) term enrichment, highlighting biological processes associated with accessibility changes.
+
+  
 ### Output files
 
 - Merged peak set (*.bed)
@@ -344,12 +384,6 @@ This analysis is divided into two main steps:
 - Volcano plot (volcano_X.pdf)
 - Peak annotation files (UP_peaks.bed, DOWN_peaks.bed)
 - GO enrichment plots
-
-
-
-
-
-
 
 
 #### Notes
