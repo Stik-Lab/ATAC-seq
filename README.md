@@ -336,9 +336,9 @@ sbatch multicov.sh
 
 ##### Command line
 ```bash
-cat ${path_macs2}/*_peaks.narrowPeak | \
+cat *_peaks.narrowPeak | \
   bedtools merge | \
-  bedtools sort > ${path_output}/${describer}pk.merged.sort.bed
+  bedtools sort > FILE_pk.merged.sort.bed
 ```
 
 **2.** For each BAM file (*_clean.bam), read counts are quantified across the merged peaks using bedtools multicov.
@@ -346,9 +346,9 @@ cat ${path_macs2}/*_peaks.narrowPeak | \
 ##### Command line
 ```bash
 bedtools multicov \
-  -bams ${path_bam}/*_clean.bam \
-  -bed ${path_output}/${describer}pk.merged.sort.bed \
-  > ${path_output}/${describer}_coverage.tmp
+  -bams *_clean.bam \
+  -bed FILE_pk.merged.sort.bed \
+  > FILE_coverage.tmp
 ```
   
 - The output file serves as the input for downstream differential accessibility analysis in R.
