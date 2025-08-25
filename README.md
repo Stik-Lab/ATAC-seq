@@ -67,8 +67,8 @@ fastqc sample.fastq.gz -o output_directory
 ```
 #### Arguments:
 
-- sample.fastq.gz: Input FASTQ file
-- -o: Output directory
+- ```sample.fastq.gz```: Input FASTQ file
+- ```-o```: Output directory
 
 
 
@@ -82,10 +82,10 @@ trim_galore --fastqc --output_dir output_dir --paired sample_1.fastq.gz sample_2
 ```
 #### Arguments:
 
-- --fastqc: Runs FastQC after trimming
-- --output_dir: Output directory
-- --paired: Paired-end read mode
-- sample_1.fastq.gz, sample_2.fastq.gz: Input files
+- ```--fastqc```: Runs FastQC after trimming
+- ```--output_dir```: Output directory
+- ```--paired```: Paired-end read mode
+- ```sample_1.fastq.gz```, ```sample_2.fastq.gz```: Input files
 
 ### 3. Alignment (Bowtie2)
 Aligns trimmed reads to the reference genome.
@@ -97,10 +97,10 @@ bowtie2 --very-sensitive -x reference_index --threads 8 -1 sample_1.fq.gz -2 sam
 ```
 
 #### Arguments:
-- --very-sensitive: High-sensitivity alignment
-- -x: Bowtie2 reference index
-- -1, -2: Paired-end FASTQ files
-- -S: Output SAM file
+- ```--very-sensitive```: High-sensitivity alignment
+- ```-x```: Bowtie2 reference index
+- ```-1```, ```-2```: Paired-end FASTQ files
+- ```-S```: Output SAM file
 
 ### 4. SAM to BAM Conversion and Sorting (SAMtools)
 Converts the SAM file to a sorted BAM file and creates an index.
@@ -113,9 +113,9 @@ samtools index output.bam
 ```
 #### Arguments:
 
-- view: Converts SAM to BAM
-- sort: Sorts BAM by coordinates
-- index: Creates index for BAM
+- ```view```: Converts SAM to BAM
+- ```sort```: Sorts BAM by coordinates
+- ```index```: Creates index for BAM
 
 ### 5. Remove Mitochondrial Reads (chrM)
 Filters out mitochondrial reads from the BAM file.
@@ -138,8 +138,8 @@ samtools view -F 2304 -b -q 10 input.bam > output.bam
 ```
 #### Arguments:
 
-- -F 2304: Filters out non-primary and duplicate reads
-- -q 10: Minimum mapping quality
+- ```-F 2304```: Filters out non-primary and duplicate reads
+- ```-q 10```: Minimum mapping quality
 
 ### 7. Remove Duplicates (Picard)
 Marks and removes PCR duplicates.
@@ -154,10 +154,10 @@ java -jar picard.jar MarkDuplicates \
   REMOVE_DUPLICATES=true
 ```
 #### Arguments:
-- I → Input BAM file (input.bam) 
-- O → Output BAM file after duplicate removal (dedup.bam)
-- M → Metrics file reporting duplication statistics (metrics.txt)
-- REMOVE_DUPLICATES=true → Removes duplicates instead of just marking them
+- ```I``` → Input BAM file (input.bam) 
+- ```O``` → Output BAM file after duplicate removal (dedup.bam)
+- ```M``` → Metrics file reporting duplication statistics (metrics.txt)
+- ```REMOVE_DUPLICATES=true``` → Removes duplicates instead of just marking them
 
 
 ### 8. Remove Blacklist Regions (bedtools)
@@ -170,10 +170,10 @@ bedtools intersect -nonamecheck -v -abam input.bam -b blacklist.bed > clean.bam
 samtools index clean.bam
 ```
 #### Arguments (bedtools intersect):
-- -nonamecheck → Ignores mismatches between sequence names in the BAM and BED files
-- -v → Reports entries in input.bam that have no overlap with blacklist.bed
-- -abam input.bam → Input BAM file
-- -b blacklist.bed → BED file of regions to exclude
+- ```-nonamecheck``` → Ignores mismatches between sequence names in the BAM and BED files
+- ```-v``` → Reports entries in input.bam that have no overlap with blacklist.bed
+- ```-abam input.bam``` → Input BAM file
+- ```-b``` blacklist.bed → BED file of regions to exclude
 
 
 ### 9. Generate Signal Tracks (deepTools)
@@ -192,12 +192,12 @@ bamCoverage \
 ```
 #### Arguments:
 
-- --bam: Input BAM file (cleaned, filtered, and deduplicated)
-- --outFileName: Output bigWig file name
-- --effectiveGenomeSize: Effective genome size (e.g. 2913022398 for human hg38)
-- --outFileFormat: Output format, typically bigwig
-- --binSize: Bin size for signal aggregation (e.g. 1 bp resolution)
-- --normalizeUsing: Normalization method (e.g. RPGC = Reads Per Genomic Content)
+- ```--bam```: Input BAM file (cleaned, filtered, and deduplicated)
+- ```--outFileName```: Output bigWig file name
+- ```--effectiveGenomeSize```: Effective genome size (e.g. 2913022398 for human hg38)
+- ```--outFileFormat```: Output format, typically bigwig
+- ```--binSize```: Bin size for signal aggregation (e.g. 1 bp resolution)
+- ```--normalizeUsing```: Normalization method (e.g. RPGC = Reads Per Genomic Content)
 
 
 ### 10. Peak Calling (MACS2)
@@ -218,7 +218,9 @@ macs2 callpeak \
 
 #### Arguments:
 
-- --format BAMPE: Specifies paired-end BAM format
+-``` --format BAMPE: Specifies paired-end BAM format
+-``` --format BAMPE: Specifies paired-end BAM format
+- ```--format BAMPE: Specifies paired-end BAM format
 - -t: Input treatment BAM file (clean.bam)
 - -g hs: Genome size (hs for human, or use effective genome size like 2.7e9) 
 - -n: Sample name prefix for output files
