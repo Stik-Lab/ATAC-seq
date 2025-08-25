@@ -218,15 +218,13 @@ macs2 callpeak \
 
 #### Arguments:
 
--``` --format BAMPE: Specifies paired-end BAM format
--``` --format BAMPE: Specifies paired-end BAM format
-- ```--format BAMPE: Specifies paired-end BAM format
-- -t: Input treatment BAM file (clean.bam)
-- -g hs: Genome size (hs for human, or use effective genome size like 2.7e9) 
-- -n: Sample name prefix for output files
-- -B: Generates signal pileup files (*.bdg) 
-- -q 0.05: FDR cutoff for peak detection (q-value) 
-- --outdir: Output directory for peak files
+- ``` --format BAMPE```: Specifies paired-end BAM format 
+- ```-t```: Input treatment BAM file (clean.bam)
+- ```-g hs```: Genome size (hs for human, or use effective genome size like 2.7e9)
+- ```-n```: Sample name prefix for output files
+- ```-B```: Generates signal pileup files (*.bdg) 
+- ```-q 0.05```: FDR cutoff for peak detection (q-value) 
+- ```--outdir```: Output directory for peak files
 
 ### Output files
 
