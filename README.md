@@ -57,6 +57,9 @@ This repository contains a complete ATAC-seq analysis pipeline designed for SLUR
 ```bash
 sbatch ATAC_PIPELINE.sh
 ```
+> [!IMPORTANT]
+> Make sure all required modules are loaded or installed in your environment.
+
 ### 1. Quality Control (FastQC)
 Runs a quality control check on the raw FASTQ files.
 
@@ -330,6 +333,10 @@ This analysis is divided into two main steps: **(1) peak quantification across s
 ```bash
 sbatch multicov.sh
 ```
+
+> [!IMPORTANT]
+> Make sure all required modules are loaded or installed in your environment.
+
 #### Step-by-step description
 
 **1.** All peak files (*_peaks.narrowPeak) are merged and sorted into a consensus peak set.
@@ -386,6 +393,5 @@ bedtools multicov \
 - GO enrichment plots
 
 
-#### Notes
-- Make sure all required modules are loaded or installed in your environment.
-- The pipeline assumes paired-end sequencing data and a pre-built Bowtie2 genome index.
+NOTES:
+The pipeline assumes paired-end sequencing data and a pre-built Bowtie2 genome index.
