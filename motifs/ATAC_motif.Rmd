@@ -21,21 +21,21 @@ library(tidyr)
 
 # ######### motif analysis with homer
 
-```{r pressure, echo=FALSE}
+```{r, import homer results}
 library(reshape2)
-UP_motifs <- read.table("../motif/UP_peaks/knownResults.txt",
+UP_motifs <- read.table("motif/UP_peaks/knownResults.txt",
                             header = TRUE,
                             sep = "\t")
 UP_motifs$minuslog2_pvalue <- -log2(UP_motifs$P.value)
 UP_motifs$type <- "UP"
 
-DOWN_motifs <- read.table("../motif/DOWN_peaks/knownResults.txt",
+DOWN_motifs <- read.table("motif/DOWN_peaks/knownResults.txt",
                             header = TRUE,
                             sep = "\t")
 DOWN_motifs$minuslog2_pvalue <- -log2(DOWN_motifs$P.value)
 DOWN_motifs$type <- "DOWN"
 
-NO_motifs <- read.table("../motif/NO_peaks/knownResults.txt",
+NO_motifs <- read.table("motif/NO_peaks/knownResults.txt",
                             header = TRUE,
                             sep = "\t")
 NO_motifs$minuslog2_pvalue <- -log2(DOWN_motifs$P.value)
@@ -112,7 +112,7 @@ NO_rch_697EP1HFpk_motifs_sep_uno <-NO_rch_697EP1HFpk_motifs_sep_uno %>%
 
 ```
 
-```{r pressure, echo=FALSE}
+```{r, plot}
 # plot curated results
 
 DOWN_rch_697EP1HFpk_motifs_sep_top <- head(DOWN_rch_697EP1HFpk_motifs_sep_uno[order(DOWN_rch_697EP1HFpk_motifs_sep_uno$P.value), ], 20)
