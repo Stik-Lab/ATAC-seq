@@ -33,16 +33,21 @@ done
 
 # ========== Create all output directories ==========
 if [ ! -d "${path_tobias}" ]; then
-  mkdir -p "${path_output}"
+  mkdir -p "${path_tobias}"
 fi
 
 # ========== ATACorrect + FootprintScores ==========
 for cond in ${cond1} ${cond2}
 do
 
+if [ ! -f "${path_bam}/${cond}_clean.bam.bai" ]; then
+    echo "Error: BAM index for '$cond' not found."
+    exit 1
+fi
+
 	echo ">> Processing ${cond}..."
 
-TOBIAS ATACorrect --bam ${{path_bam}/${cond}_clean.bam --genome ${refgenome} \
+TOBIAS ATACorrect --bam ${path_bam}/${cond}_clean.bam --genome ${refgenome} \
 	--peaks ${merged_peaks_file} \
 	--outdir ${path_tobias} --cores 8
 
@@ -57,7 +62,7 @@ echo ">> Running BINDetect..."
 TOBIAS BINDetect --motifs ${jaspar_motifs} \
 	--signals ${path_tobias}/${cond1}_footprints.bw ${path_tobias}/${cond2}_footprints.bw \
 	--genome ${refgenome} \
-	--peaks ${merged_peaks_file}/ \
+	--peaks ${merged_peaks_file} \
 	--cond_names ${cond1} ${cond2} --cores 8 \
 	--outdir ${path_tobias}
 
