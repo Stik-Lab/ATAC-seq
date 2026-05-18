@@ -5,7 +5,7 @@
 #SBATCH --time=24:00:00
 #SBATCH --cpus-per-task=4
 #SBATCH --output=homer_%A.log
-#SBATCH --array=1-1
+#SBATCH --array=1-N
 
 # ========== VARIABLES ==========
 names=( X )
