@@ -42,18 +42,43 @@ This repository contains a complete ATAC-seq analysis pipeline designed for SLUR
 
    
 <!-- Pre-procesing Step-by-Step Description -->
-## Pre-processing Step-by-Step Description
+## Pre-processing Step-by-Step Description (ATAC_PIPELINE.sh)
 
 ### Input files
 
 - Raw paired-end FASTQ files (sample_1.fastq.gz, sample_2.fastq.gz)
 - Reference genome index for Bowtie2.
+    - (https://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/hg38.fa.gz)
 - Blacklist BED file (genomic regions to exclude)
+    - https://github.com/Boyle-Lab/Blacklist/blob/master/lists/hg38-blacklist.v2.bed.gz
 
 ### How to Run
 
-1. Modify the variables inside `ATAC_PIPELINE.sh` with your paths and sample names.
-2. Submit to SLURM:
+1. Modify the variables inside `ATAC_PIPELINE.sh` with your paths and sample names:
+
+```bash
+#SBATCH --array=1-X # change X for the actual number of samples before submiting
+```
+```bash
+describer_list=(X)  # Replace X with actual sample names
+```
+
+```bash
+#  Folder paths 
+path_fq="path_to_fastq_files"
+path_bam="path_to_bam_files"
+path_temp="path_to_temp_files"
+path_bw="path_to_bigwig_files"
+path_macs2="path_to_macs2"
+
+# Files and programs 
+indexgenome='bowtie2/GRCh38_noalt_as/GRCh38_noalt_as' # Bowtie2 genome index
+blacklist_file="path_to_blacklist"
+effective_genome_size=2913022398
+
+```
+
+3. Submit to SLURM:
 ```bash
 sbatch ATAC_PIPELINE.sh
 ```
@@ -72,7 +97,6 @@ fastqc sample.fastq.gz -o output_directory
 
 - ```sample.fastq.gz```: Input FASTQ file
 - ```-o```: Output directory
-
 
 
 ### 2. Adapter Trimming (Trim Galore)
@@ -231,13 +255,21 @@ macs2 callpeak \
 
 ### Output files
 
-- FastQC quality reports (.html, .zip)
-- Trimmed FASTQ files
-- Alignment files (.sam, .bam, .bai)
-- Filtered and deduplicated BAM files (clean.bam, dedup.bam)
-- Duplicate metrics (metrics.txt)
-- Normalized signal tracks (.bw)
-- Peak calling results from MACS2 (.narrowPeak, .xls, .bdg, etc.)
+| File | Format | Description |
+|------|--------|-------------|
+| FastQC reports | `.html`, `.zip` | Quality control reports for raw reads |
+| Trimmed reads | `.fastq.gz` | Adapter-trimmed reads from Trim Galore |
+| Alignment | `.sam` | Raw alignment output from Bowtie2 |
+| Sorted alignment | `.bam`, `.bai` | Sorted and indexed BAM file |
+| chrM-removed BAM | `.bam` | Alignment with mitochondrial reads excluded |
+| Quality-filtered BAM | `.bam` | Reads filtered by mapping quality (MAPQ ≥ 10) and flags |
+| Deduplicated BAM | `.bam` | PCR duplicates removed with Picard |
+| Blacklist-filtered BAM | `_clean.bam`, `.bai` | Final clean BAM with blacklist regions excluded |
+| Signal track | `.bw` | RPGC-normalized bigWig at 1 bp resolution |
+| MACS2 peaks | `.narrowPeak` | Called peaks with scores and fold enrichment |
+| MACS2 summits | `_summits.bed` | Single-bp peak summits |
+| MACS2 signal | `.bdg` | Bedgraph signal tracks |
+| MACS2 stats | `.xls` | Peak calling summary statistics |
 
 ## Motif Analysis Description
 
