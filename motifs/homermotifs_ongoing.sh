@@ -11,9 +11,13 @@
 names=( X )
 describer=${names[$SLURM_ARRAY_TASK_ID-1]}
 
-input_bed='bam_atac/${describer}.bed'
+if [ ! -d "${output_dir}" ]; then
+   mkdir -p "${output_dir}"
+fi
+
+input_bed="bam_atac/${describer}.bed"
 genome='hg38'
-output_dir='motifs_loops/${describer}'
+output_dir="motifs/${describer}"
 
 # ========== MODULES ==========
 module load homer/0.1
@@ -30,6 +34,6 @@ fi
 
 # ========== RUN HOMER ==========
 echo ">> Running HOMER on $input_bed..."
-findMotifsGenome.pl "${input_bed}" "${genome}" "${output_dir}" -size 200 -nomotif
+findMotifsGenome.pl "${input_bed}" "${genome}" "${output_dir}" -size 200 -p 4
 
 echo ">> HOMER analysis completed for ${describer}."
