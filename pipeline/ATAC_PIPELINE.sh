@@ -5,13 +5,24 @@
 #SBATCH --time=48:00:00
 #SBATCH --cpus-per-task=8
 #SBATCH --output=atac_pipeline_%A-%a.log
-#SBATCH --array=1-X
+#SBATCH --array=1-X # change X for the actual number of samples before submiting
 
 # ========== VARIABLES ==========
 describer_list=(X)  # Replace X with actual sample names
 describer=${describer_list[$SLURM_ARRAY_TASK_ID-1]}
 
-source ./config.sh
+#  Folder paths 
+path_fq="path_to_fastq_files"
+path_bam="path_to_bam_files"
+path_temp="path_to_temp_files"
+path_bw="path_to_bigwig_files"
+path_macs2="path_to_macs2"
+
+# Files and programs 
+indexgenome='bowtie2/GRCh38_noalt_as/GRCh38_noalt_as' # Bowtie2 genome index
+blacklist_file="path_to_blacklist"
+effective_genome_size=2913022398
+
 
 for dir in "${path_bam}" "${path_temp}" "${path_bw}" "${path_macs2}"; do
   if [ ! -d "${dir}" ]; then
@@ -49,7 +60,7 @@ echo "................................................................ 2. END_TR
 
 echo "................................................................ 3. START_ALIGNMENT ${describer} ................................................................"
 
-bowtie2 --very-sensitive -x ${refgenome} --threads 8 \
+bowtie2 --very-sensitive -x ${indexgenome} --threads 8 \
     -1 ${path_fq}/${describer}_*1_val_1.fq.gz \
     -2 ${path_fq}/${describer}_*2_val_2.fq.gz \
     -S ${path_bam}/${describer}.sam
