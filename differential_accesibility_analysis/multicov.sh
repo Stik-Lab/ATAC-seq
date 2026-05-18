@@ -26,13 +26,13 @@ done
 # list all bam files 
 bam_files=$(ls ${path_bam}/*_clean.bam | tr '\n' ' ')
 
-# fist prepare bedfile with all merged peaks
+# first prepare bedfile with all merged peaks
 
 cat ${path_macs2}/*_peaks.narrowPeak | bedtools merge | bedtools sort > ${path_output}/${describer}pk.merged.sort.bed
 
 
 bedtools multicov -bams  ${bam_files} \
-     -bed ${path_macs2}/${describer}pk.merged.sort.bed > ${path_output}/${describer}_coverage.bed
+     -bed ${path_output}/${describer}pk.merged.sort.bed > ${path_output}/${describer}_coverage.tmp
 
 
 # Create header
