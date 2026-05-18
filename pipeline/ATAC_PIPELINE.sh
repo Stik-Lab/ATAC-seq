@@ -11,14 +11,7 @@
 describer_list=(X)  # Replace X with actual sample names
 describer=${describer_list[$SLURM_ARRAY_TASK_ID-1]}
 
-path_fq="path_to_fastq_files"
-path_bam="path_to_bam_files"
-path_temp="path_to_temp_files"
-path_bw="path_to_bigwig_files"
-path_macs2="path_to_macs2"
-refgenome="path_to_refgenome"
-blacklist_file="path_to_blacklist"
-effective_genome_size=2913022398
+source ./config.sh
 
 for dir in "${path_bam}" "${path_temp}" "${path_bw}" "${path_macs2}"; do
   if [ ! -d "${dir}" ]; then
