@@ -12,6 +12,7 @@ describer=${names[$SLURM_ARRAY_TASK_ID-1]}
 
 path_macs2='path_macs2'
 path_bam='path_to_output_files'
+effective_genome_size=2913022398
 
 module load MACS2/2.2.5-foss-2021b-Python-3.8.5
 
