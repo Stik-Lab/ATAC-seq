@@ -124,7 +124,7 @@ echo "................................................................ 9. START_
 bamCoverage --bam ${path_bam}/${describer}_clean.bam \
     --outFileName ${path_bw}/${describer}.bw \
     --effectiveGenomeSize ${effective_genome_size} \
-    --outFileFormat bigwig --binSize 1 --normalizeUsing RPGC \
+    --outFileFormat bigwig --binSize 10 --normalizeUsing RPGC \
     > ${path_bw}/${describer}.log
 
 echo "................................................................ 9. END_BAMCOVERAGE ${describer} ................................................................"
@@ -134,7 +134,7 @@ echo "................................................................ 9. END_BA
 echo "................................................................ 10. START_PEAK_CALLING ${describer} ................................................................"
 
 macs2 callpeak --format BAMPE -t ${path_bam}/${describer}_clean.bam \
-    -g hs -n ${describer} -B -q 0.05 --outdir ${path_macs2}
+    -g ${effective_genome_size} -n ${describer} -B -q 0.05  --keep-dup all --outdir ${path_macs2}
 
 echo "................................................................ 10. END_PEAK_CALLING ${describer} ................................................................"
 
