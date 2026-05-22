@@ -12,6 +12,7 @@ describer=${names[$SLURM_ARRAY_TASK_ID-1]}
 
 path_bam='path_to_output_files'
 path_bw='path_to_bigwig_files'
+effective_genome_size=2913022398
 
 module load deepTools/3.5.1-foss-2021b
 
