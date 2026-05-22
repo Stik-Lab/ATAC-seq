@@ -18,6 +18,6 @@ module load deepTools/3.5.1-foss-2021b
 
 echo "................................................................ 8. START_bamcoverage ${describer} ................................................................"
 
-bamCoverage --bam ${path_bam}/${describer}_clean.bam --outFileName ${path_bw}/${describer}.bw --effectiveGenomeSize 2913022398 --outFileFormat ${path_bw} --binSize 1 --normalizeUsing RPGC > ${path_bw}/${describer}.log
+bamCoverage --bam ${path_bam}/${describer}_clean.bam --outFileName ${path_bw}/${describer}.bw --effectiveGenomeSize ${effective_genome_size} --outFileFormat ${path_bw} --binSize 10 --normalizeUsing RPGC > ${path_bw}/${describer}.log
 
 echo "................................................................ 8. END_bamcoverage ${describer} ................................................................"
