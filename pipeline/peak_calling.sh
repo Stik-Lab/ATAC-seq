@@ -18,7 +18,7 @@ module load MACS2/2.2.5-foss-2021b-Python-3.8.5
 
 echo "................................................................ 9. START_peak_calling ${describer} ................................................................"
 
-macs2 callpeak --format BAMPE -t ${path_bam}/${describer}_clean.bam -g hs -n ${describer} -B -q 0.05 --outdir ${path_macs2}
+macs2 callpeak --format BAMPE -t ${path_bam}/${describer}_clean.bam -g ${effective_genome_size} -n ${describer} -B -q 0.05 --outdir ${path_macs2}
 
 echo "................................................................ 9. END_peak_calling ${describer} ................................................................"
 
