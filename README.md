@@ -214,7 +214,7 @@ bamCoverage \
   --outFileName output.bw \
   --effectiveGenomeSize genome_size \
   --outFileFormat bigwig \
-  --binSize 1 \
+  --binSize 10 \
   --normalizeUsing RPGC
 ```
 #### Arguments:
@@ -223,7 +223,7 @@ bamCoverage \
 - ```--outFileName```: Output bigWig file name
 - ```--effectiveGenomeSize```: Effective genome size (e.g. 2913022398 for human hg38)
 - ```--outFileFormat```: Output format, typically bigwig
-- ```--binSize```: Bin size for signal aggregation (e.g. 1 bp resolution)
+- ```--binSize```: Bin size for signal aggregation (e.g. 10 bp resolution)
 - ```--normalizeUsing```: Normalization method (e.g. RPGC = Reads Per Genomic Content)
 
 
