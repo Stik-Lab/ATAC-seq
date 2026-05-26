@@ -28,7 +28,7 @@ bam_files=$(ls ${path_bam}/*_clean.bam | tr '\n' ' ')
 
 # first prepare bedfile with all merged peaks
 
-cat ${path_macs2}/*_peaks.narrowPeak | bedtools merge | bedtools sort > ${path_output}/${describer}pk.merged.sort.bed
+cat ${path_macs2}/*_peaks.narrowPeak | bedtools sort | bedtools merge > ${path_output}/${describer}pk.merged.sort.bed
 
 
 bedtools multicov -bams  ${bam_files} \
