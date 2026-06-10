@@ -165,7 +165,7 @@ samtools view -F 2304 -b -q 10 input.bam > output.bam
 ```
 #### Arguments:
 
-- ```-F 2304```: Filters out non-primary and duplicate reads
+- ```-F 2304```: Filters out non-primary alignments
 - ```-q 10```: Minimum mapping quality
 
 ### 7. Remove Duplicates (Picard)
