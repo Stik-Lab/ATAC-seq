@@ -1,39 +1,29 @@
 #!/bin/bash
 
-#SBATCH --job-name=MOTIF_analysis
-#SBATCH --mem=50gb
-#SBATCH --time=24:00:00
+#SBATCH --job-name=motif
+#SBATCH --mem=60gb
+#SBATCH --time=02:00:00
 #SBATCH --cpus-per-task=4
-#SBATCH --output=homer_%A.log
-#SBATCH --array=1-N
+#SBATCH --output=motif_%A-%a.log
+#SBATCH --array=1-3
 
-# ========== VARIABLES ==========
-names=( X )
+names=( X Y Z )
 describer=${names[$SLURM_ARRAY_TASK_ID-1]}
 
-if [ ! -d "${output_dir}" ]; then
-   mkdir -p "${output_dir}"
-fi
-
-input_bed="bam_atac/${describer}.bed"
-genome='hg38'
-output_dir="motifs/${describer}"
-
-# ========== MODULES ==========
 module load homer/0.1
 
-# ========== CHECKS & DIRECTORIES ==========
-if [ ! -f "${input_bed}" ]; then
-    echo "Error: Input BED file '${input_bed}' not found."
-    exit 1
-fi
+path_bed='macs2'
+path_motifs='motifs'
 
-if [ ! -d "${output_dir}" ]; then
-    mkdir -p "${output_dir}"
+if [ ! -d "${path_motifs}" ]; then
+    mkdir -p "${path_motifs}"
 fi
 
 # ========== RUN HOMER ==========
-echo ">> Running HOMER on $input_bed..."
-findMotifsGenome.pl "${input_bed}" "${genome}" "${output_dir}" -size 200 -p 4
+echo "................................................................ START_HOMER ${describer} ................................................................"
 
-echo ">> HOMER analysis completed for ${describer}."
+findMotifsGenome.pl ${path_bed}/${describer}.bed hg38 \
+    ${path_motifs}/${describer} \
+    -size 200 -p 4
+
+echo "................................................................ END_HOMER ${describer} ................................................................"
