@@ -397,9 +397,13 @@ bedtools multicov \
 #### How to Run
 
 **1.** Open RStudio and load the script ATAC_diffanalysis.Rmd.
+
 **2.** Edit the input file name (replace "file.bed" with your multicov count matrix).
+
 **3.** Adjust the sample conditions (e.g., X vs. Y) in the metadata section of the script.
+
 **4.** Run the script step by step (chunk by chunk) in RStudio.
+
 **5.** At the end, all results and plots will be saved automatically in the working directory.
 
 
