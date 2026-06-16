@@ -131,21 +131,23 @@ echo "................................................................ 6. END_FI
 # ========== STEP 7: REMOVE DUPLICATES ==========
 
 echo "................................................................ 7. START_REMOVE_DUPLICATES ${describer} ................................................................"
-
-java -jar $EBROOTPICARD/picard.jar MarkDuplicates \
-    I=${path_temp}/${describer}.qual.bam \
-    O=${path_temp}/${describer}_removed_duplicates.bam \
-    M=${path_temp}/${describer}_marked_dup_metrics.txt \
-    REMOVE_DUPLICATES=true ASSUME_SORTED=true VERBOSITY=WARNING
-
+if [ -s "${path_temp}/${describer}_removed_duplicates.bam" ]; then
+    echo "SKIP MarkDuplicates: file already exists for ${describer}"
+else
+  java -jar $EBROOTPICARD/picard.jar MarkDuplicates \
+      I=${path_temp}/${describer}.qual.bam \
+      O=${path_temp}/${describer}_removed_duplicates.bam \
+      M=${path_temp}/${describer}_marked_dup_metrics.txt \
+      REMOVE_DUPLICATES=true ASSUME_SORTED=true VERBOSITY=WARNING
+fi
 echo "................................................................ 7. END_REMOVE_DUPLICATES ${describer} ................................................................"
 
 # ========== STEP 8: REMOVE BLACKLIST REGIONS ==========
 
 echo "................................................................ 8. START_REMOVE_BLACKLIST ${describer} ................................................................"
 
-if [ -s "${path_temp}/${describer}_removed_duplicates.bam" ]; then
-    echo "SKIP MarkDuplicates: file already exists for ${describer}"
+if [ -s "${BAM_CLEAN}" ] && [ -s "${BAM_CLEAN}.bai" ]; then
+    echo "SKIP blacklist removal: file already exists for ${describer}"
 else
   bedtools intersect -nonamecheck -v -abam ${path_temp}/${describer}_removed_duplicates.bam \
       -b ${blacklist_file} > ${path_bam}/${describer}_clean.bam
