@@ -65,6 +65,7 @@ echo "................................................................ 1. END_FA
 # ========== STEP 2: TRIM GALORE ==========
 
 echo "................................................................ 2. START_TRIM_GALORE ${describer} ................................................................"
+
 R1_TRIM=$(ls ${path_fq}/${describer}*val_1.f*q.gz 2>/dev/null | head -n 1)
 R2_TRIM=$(ls ${path_fq}/${describer}*val_2.f*q.gz 2>/dev/null | head -n 1)
 if [ -s "${R1_TRIM}" ] && [ -s "${R2_TRIM}" ]; then
