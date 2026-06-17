@@ -80,12 +80,16 @@ echo "................................................................ 2. END_TR
 
 echo "................................................................ 3. START_ALIGNMENT ${describer} ................................................................"
 
+R1_TRIM=$(ls ${path_fq}/${describer}*val_1.f*q.gz 2>/dev/null | head -n 1)
+R2_TRIM=$(ls ${path_fq}/${describer}*val_2.f*q.gz 2>/dev/null | head -n 1)
+
+
 if [ -s "${SAM}" ]; then
     echo "SKIP Bowtie2: SAM already exists for ${describer}"
 else
   bowtie2 --very-sensitive -x ${indexgenome} --threads 8 \
-      -1 ${path_fq}/${describer}_*1_val_1.fq.gz \
-      -2 ${path_fq}/${describer}_*2_val_2.fq.gz \
+      -1 "${R1_TRIM}" \
+      -2 "${R2_TRIM}" \
       -S ${path_bam}/${describer}.sam
 fi
 
