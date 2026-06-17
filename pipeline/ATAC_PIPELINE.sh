@@ -23,6 +23,9 @@ indexgenome='bowtie2/GRCh38_noalt_as/GRCh38_noalt_as' # Bowtie2 genome index
 blacklist_file="path_to_blacklist"
 effective_genome_size=2913022398
 
+# Find R1 and R2
+R1_RAW=$(ls ${path_fq}/${describer}*{_1,_*1}*.f*q.gz 2>/dev/null | head -n 1)
+R2_RAW=$(ls ${path_fq}/${describer}*{_2,_*2}*.f*q.gz 2>/dev/null | head -n 1)
 
 SAM=${path_bam}/${describer}.sam
 BAM_CLEAN=${path_bam}/${describer}_clean.bam
@@ -68,7 +71,7 @@ if [ -s "${R1_TRIM}" ] && [ -s "${R2_TRIM}" ]; then
     echo "SKIP Trim Galore: trimmed files already exist for ${describer}"
 else
   trim_galore --fastqc --output_dir ${path_fq} --paired \
-      ${path_fq}/${describer}_*1.fastq.gz ${path_fq}/${describer}_*2.fastq.gz
+    "${R1_RAW}" "${R2_RAW}"
 fi
 
 echo "................................................................ 2. END_TRIM_GALORE ${describer} ................................................................"
